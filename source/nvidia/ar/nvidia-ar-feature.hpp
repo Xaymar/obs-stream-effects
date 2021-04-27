@@ -18,139 +18,148 @@
  */
 
 #pragma once
-#include <string>
+#include <string_view>
 #include "nvidia-ar.hpp"
 #include "nvidia/cuda/nvidia-cuda-stream.hpp"
 
 namespace nvidia::ar {
 	class feature {
+		protected:
 		std::shared_ptr<::nvidia::ar::ar> _ar;
-		std::shared_ptr<nvAR_Feature>     _feature;
+		::nvidia::ar::feature_t           _feature;
 
 		public:
-		feature(std::shared_ptr<::nvidia::ar::ar> ar, NvAR_FeatureID feature);
 		~feature();
+		feature(feature_id_t feature);
+
+		::nvidia::ar::feature_t get()
+		{
+			return _feature;
+		}
+
+		inline void load()
+		{
+			if (auto res = _ar->AR_Load(_feature); res != result::SUCCESS)
+				throw ar_error(res);
+		}
+
+		inline void run()
+		{
+			if (auto res = _ar->AR_Run(_feature); res != result::SUCCESS)
+				throw ar_error(res);
+		}
 
 		public:
-		template<typename T>
-		inline NvCV_Status set(std::string name, T value);
-		template<typename T>
-		inline NvCV_Status get(std::string name, T& value);
-
-		template<>
-		inline NvCV_Status set(std::string name, int32_t value)
+		inline void set(std::string_view name, int32_t value)
 		{
-			return _ar->set_int32(_feature.get(), name.c_str(), value);
+			if (auto res = _ar->AR_SetS32(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, int32_t& value)
+		inline void get(std::string_view name, int32_t* value)
 		{
-			return _ar->get_int32(_feature.get(), name.c_str(), &value);
+			if (auto res = _ar->AR_GetS32(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, uint32_t value)
+		inline void set(std::string_view name, uint32_t value)
 		{
-			return _ar->set_uint32(_feature.get(), name.c_str(), value);
+			if (auto res = _ar->AR_SetU32(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, uint32_t& value)
+		inline void get(std::string_view name, uint32_t* value)
 		{
-			return _ar->get_uint32(_feature.get(), name.c_str(), &value);
+			if (auto res = _ar->AR_GetU32(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, uint64_t value)
+		inline void set(std::string_view name, uint64_t value)
 		{
-			return _ar->set_uint64(_feature.get(), name.c_str(), value);
+			if (auto res = _ar->AR_SetU64(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, uint64_t& value)
+		inline void get(std::string_view name, uint64_t* value)
 		{
-			return _ar->get_uint64(_feature.get(), name.c_str(), &value);
+			if (auto res = _ar->AR_GetU64(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, std::float_t value)
+		inline void set(std::string_view name, float value)
 		{
-			return _ar->set_float32(_feature.get(), name.c_str(), value);
+			if (auto res = _ar->AR_SetF32(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, std::float_t& value)
+		inline void get(std::string_view name, float* value)
 		{
-			return _ar->get_float32(_feature.get(), name.c_str(), &value);
+			if (auto res = _ar->AR_GetF32(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, std::vector<std::float_t> value)
+		inline void set(std::string_view name, double value)
 		{
-			return _ar->set_float32_array(_feature.get(), name.c_str(), value.data(),
-										  static_cast<int32_t>(value.size()));
+			if (auto res = _ar->AR_SetF64(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, std::vector<std::float_t>& value)
+		inline void get(std::string_view name, double* value)
 		{
-			// ToDo: Validate this.
-			const float* vals      = nullptr;
-			int          val_count = 0;
-			NvCV_Status  res       = _ar->get_float32_array(_feature.get(), name.c_str(), &vals, &val_count);
-			if (res != NVCV_SUCCESS) {
-				return res;
-			} else {
-				value.resize(static_cast<size_t>(val_count));
-				for (std::size_t idx = 0; idx < static_cast<std::size_t>(val_count); idx++) {
-					value[idx] = *vals;
-					vals++;
-				}
-				return res;
-			}
+			if (auto res = _ar->AR_GetF64(_feature, name.data(), value); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, std::double_t value)
+		inline void set(std::string_view name, std::vector<float>& value)
 		{
-			return _ar->set_float64(_feature.get(), name.c_str(), value);
+			if (auto res = _ar->AR_SetF32Array(_feature, name.data(), value.data(), static_cast<int32_t>(value.size()));
+				res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, std::double_t& value)
+		inline void get(std::string_view name, std::vector<float>& value)
 		{
-			return _ar->get_float64(_feature.get(), name.c_str(), &value);
+			const float* data;
+			int32_t      size;
+
+			if (auto res = _ar->AR_GetF32Array(_feature, name.data(), &data, &size); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
+
+			value.resize(size);
+			memcpy(value.data(), data, size * sizeof(float));
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, std::string value)
+		inline void set(std::string_view name, std::string_view value)
 		{
-			return _ar->set_string(_feature.get(), name.c_str(), value.c_str());
+			if (auto res = _ar->AR_SetString(_feature, name.data(), value.data()); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
 
-		template<>
-		inline NvCV_Status get(std::string name, std::string& value)
+		inline void get(std::string_view name, std::string& value)
 		{
-			// ToDo: Validate this.
-			const char* buf;
-			NvCV_Status res = _ar->get_string(_feature.get(), name.c_str(), &buf);
-			if (res == NVCV_SUCCESS) {
-				value = std::string(buf, buf + strlen(buf));
-				return res;
-			} else {
-				return res;
-			}
+			const char* data;
+			if (auto res = _ar->AR_GetString(_feature, name.data(), &data); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
+
+			if (data != nullptr)
+				value = std::string(data);
+			else
+				value.clear();
 		}
 
-		template<>
-		inline NvCV_Status set(std::string name, std::shared_ptr<::nvidia::cuda::stream> value)
+		inline void set(std::string_view name, std::shared_ptr<::nvidia::cuda::stream> value)
 		{
-			return _ar->set_cuda_stream(_feature.get(), name.c_str(), reinterpret_cast<CUstream>(value->get()));
+			if (auto res = _ar->AR_SetCudaStream(_feature, name.data(), value->get()); res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
 		}
+		//void get(...);
 
-		template<>
-		inline NvCV_Status get(std::string name, std::shared_ptr<::nvidia::cuda::stream>& value)
-		{}
+		inline void set(std::string_view name, void* data, size_t data_size)
+		{
+			if (auto res = _ar->AR_SetObject(_feature, name.data(), data, static_cast<uint32_t>(data_size));
+				res != result::SUCCESS)
+				throw nvidia::ar::ar_error(res);
+		}
+		//void get(std::string_view name, void** data, size_t data_size);
 	};
 } // namespace nvidia::ar

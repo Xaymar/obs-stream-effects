@@ -18,18 +18,34 @@
  */
 
 #include "nvidia-ar-feature.hpp"
+#include "util/util-logging.hpp"
 
-nvidia::ar::feature::feature(std::shared_ptr<::nvidia::ar::ar> ar, NvAR_FeatureID feature) : _ar(ar)
-{
-	NvAR_FeatureHandle feat;
-	if (NvCV_Status res = _ar->create(feature, &feat); res != NVCV_SUCCESS) {
-		throw std::runtime_error("Failed to create feature.");
-	}
-
-	_feature = std::shared_ptr<nvAR_Feature>{feat, [this](NvAR_FeatureHandle v) { _ar->destroy(v); }};
-}
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<nvidia::ar::feature> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 nvidia::ar::feature::~feature()
 {
-	_feature.reset();
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+	_ar->AR_Destroy(_feature);
+}
+
+nvidia::ar::feature::feature(feature_id_t feature) : _ar(::nvidia::ar::ar::get()), _feature()
+{
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+
+	if (auto res = _ar->AR_Create(feature, &_feature); res != result::SUCCESS) {
+		throw ::nvidia::ar::ar_error(res);
+	}
 }

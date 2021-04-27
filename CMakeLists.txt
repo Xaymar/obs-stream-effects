@@ -296,11 +296,11 @@ set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ON CACHE BOOL "Enable NVENC Encoder in 
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ON CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
 
 ## Filters
+set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ON CACHE BOOL "Enable Auto-Framing Filter")
 set(${PREFIX}ENABLE_FILTER_BLUR ON CACHE BOOL "Enable Blur Filter")
 set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ON CACHE BOOL "Enable Color Grade Filter")
 set(${PREFIX}ENABLE_FILTER_DISPLACEMENT ON CACHE BOOL "Enable Displacement Filter")
 set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ON CACHE BOOL "Enable Dynamic Mask Filter")
-set(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING ON CACHE BOOL "Enable NVidia Face Tracking Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ON CACHE BOOL "Enable SDF Effects Filter")
 set(${PREFIX}ENABLE_FILTER_SHADER ON CACHE BOOL "Enable Shader Filter")
 set(${PREFIX}ENABLE_FILTER_TRANSFORM ON CACHE BOOL "Enable Transform Filter")
@@ -634,18 +634,18 @@ function(feature_filter_dynamic_mask RESOLVE)
 	is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
 endfunction()
 
-function(feature_filter_nvidia_face_tracking RESOLVE)
-	is_feature_enabled(FILTER_NVIDIA_FACE_TRACKING T_CHECK)
+function(feature_filter_autoframing RESOLVE)
+	is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
 	if(RESOLVE AND T_CHECK)
 		if(NOT D_PLATFORM_WINDOWS)
-			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires Windows. Disabling...")
-			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
+			message(WARNING "${LOGPREFIX}: Auto-Framing requires Windows. Disabling...")
+			set_feature_disabled(FILTER_AUTOFRAMING ON)
 		elseif(NOT HAVE_NVIDIA_ARSDK)
-			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires NVIDIA AR SDK. Disabling...")
-			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
+			message(WARNING "${LOGPREFIX}: Auto-Framing requires NVIDIA AR SDK. Disabling...")
+			set_feature_disabled(FILTER_AUTOFRAMING ON)
 		elseif(NOT HAVE_NVIDIA_CUDA)
-			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires NVIDIA CUDA. Disabling...")
-			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
+			message(WARNING "${LOGPREFIX}: Auto-Framing requires NVIDIA CUDA. Disabling...")
+			set_feature_disabled(FILTER_AUTOFRAMING ON)
 		endif()
 	elseif(T_CHECK)
 		set(REQUIRE_NVIDIA_ARSDK ON PARENT_SCOPE)
@@ -715,7 +715,7 @@ feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
 feature_filter_displacement(OFF)
 feature_filter_dynamic_mask(OFF)
-feature_filter_nvidia_face_tracking(OFF)
+feature_filter_autoframing(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_shader(OFF)
 feature_filter_transform(OFF)
@@ -842,7 +842,7 @@ feature_filter_blur(ON)
 feature_filter_color_grade(ON)
 feature_filter_displacement(ON)
 feature_filter_dynamic_mask(ON)
-feature_filter_nvidia_face_tracking(ON)
+feature_filter_autoframing(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_shader(ON)
 feature_filter_transform(ON)
@@ -938,9 +938,14 @@ if(HAVE_NVIDIA_ARSDK)
 		"source/nvidia/ar/nvidia-ar.cpp"
 		"source/nvidia/ar/nvidia-ar-feature.hpp"
 		"source/nvidia/ar/nvidia-ar-feature.cpp"
+		"source/nvidia/ar/nvidia-ar-facedetection.hpp"
+		"source/nvidia/ar/nvidia-ar-facedetection.cpp"
+		"source/nvidia/ar/nvidia-ar-image.hpp"
+		"source/nvidia/ar/nvidia-ar-image.cpp"
+		"source/nvidia/ar/nvidia-ar-gs-texture.hpp"
+		"source/nvidia/ar/nvidia-ar-gs-texture.cpp"
 	)
 	list(APPEND PROJECT_LIBRARIES
-		nvARProxy
 	)
 endif()
 
@@ -1209,14 +1214,14 @@ if(T_CHECK)
 endif()
 
 # Filter/NVIDIA Face Tracking
-is_feature_enabled(FILTER_NVIDIA_FACE_TRACKING T_CHECK)
+is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
 if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-nv-face-tracking.hpp"
-		"source/filters/filter-nv-face-tracking.cpp"
+		"source/filters/filter-autoframing.hpp"
+		"source/filters/filter-autoframing.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_NVIDIA_FACE_TRACKING
+		ENABLE_FILTER_AUTOFRAMING
 	)
 endif()
 
