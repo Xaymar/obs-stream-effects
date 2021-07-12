@@ -1,0 +1,31 @@
+name: Refresh
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches:
+      - 'master'
+      - 'i180n_master'
+
+jobs:
+  update-authors:
+    runs-on: ubuntu-latest
+    name: "Update Authors"
+    steps:
+    - name: "Checkout"
+      uses: actions/checkout@v2
+    - name: "Create new AUTHORS file"
+      run: |
+        # Authors
+        echo "# Authors" > AUTHORS.md
+        echo "The following people have helped make this project reality:" >> AUTHORS.md
+        echo "" >> AUTHORS.md
+
+        # Contributors
+        echo "## Contributors" >> AUTHORS.md
+        git shortlog -sn --all | sed -E "s/^\W+[0-9]+\W+//" | sort >> AUTHORS.md
+        echo "" >> AUTHORS.md
+
+        # Timestamp
+        echo "# This file was automatically generated on the following Timestamp:" >> AUTHORS.md
+        echo $(date +%Y-%m-%dT%H-%M-%S.%N%z) >> AUTHORS.md
