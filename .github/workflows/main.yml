@@ -5,6 +5,7 @@ on:
     tags:
       - '*'
     branches-ignore:
+      - 'i18n_master'
       - 'l10n_master'
   pull_request:
     branches:
